@@ -1376,6 +1376,58 @@
   }
 
   // -------------------------------------------------------------------------
+  // Memberstack identity
+  // -------------------------------------------------------------------------
+  // The Webflow mount ships with data-member-id="MEMBER_ID_VAR" (or an empty /
+  // {{wf_member_id}} token). The real Memberstack id is only known client-side
+  // after login, so without resolving it here every member's progress, points,
+  // streaks and quiz attempts record under the literal placeholder string.
+  function memberIdLooksUnresolved(v) {
+    return !v || v === 'demo-member' || v === 'preview-member'
+      || /MEMBER_ID|_VAR\b/i.test(v)           // MEMBER_ID_VAR and friends
+      || /^\{\{.*\}\}$/.test(v);                // unresolved {{wf_member_id}} binding
+  }
+
+  function waitForMemberstack(maxMs) {
+    return new Promise(resolve => {
+      const start = Date.now();
+      (function poll() {
+        const ms = window.$memberstackDom;
+        if (ms && typeof ms.getCurrentMember === 'function') return resolve(ms);
+        if (Date.now() - start >= maxMs) return resolve(null);
+        setTimeout(poll, 100);
+      })();
+    });
+  }
+
+  async function resolveMemberIdentity(root) {
+    // Respect a real id already injected by the embed; only fix placeholders.
+    if (!memberIdLooksUnresolved(state.memberId)) return;
+
+    const ms = await waitForMemberstack(3000);
+    let member = null;
+    if (ms) { try { ({ data: member } = await ms.getCurrentMember()); } catch { /* ignore */ } }
+
+    if (member && member.id) {                    // logged-in member resolved
+      state.memberId = member.id;
+      const cf   = member.customFields || {};
+      const name = [cf['first-name'], cf['last-name']].filter(Boolean).join(' ').trim()
+                || (member.auth && member.auth.email) || state.memberName;
+      if (name) state.memberName = name;
+      if (root) {
+        root.dataset.memberId = state.memberId;
+        if (name) root.dataset.memberName = name;
+      }
+      return;
+    }
+
+    // No Memberstack / logged out: normalize OFF the literal placeholder so
+    // member-scoped writes never pollute a fake "MEMBER_ID_VAR" account.
+    state.memberId = 'demo-member';
+    if (root) root.dataset.memberId = 'demo-member';
+  }
+
+  // -------------------------------------------------------------------------
   // Bootstrap
   // -------------------------------------------------------------------------
   async function init(root) {
@@ -1386,9 +1438,13 @@
 
     root.classList.add('fpr-guniq');
 
-    // Initial render with placeholder data
+    // Initial render with placeholder data (instant paint)
     state.courses = DEMO_COURSES;
     render();
+
+    // Resolve the real member id BEFORE any member-scoped calls (progress,
+    // certificates, lesson start/complete, quiz submit all use state.memberId).
+    await resolveMemberIdentity(root);
 
     // Load real data in background
     await Promise.all([loadCourses(), loadProgress(), loadLeaderboard(), loadCertificates()]);
