@@ -426,7 +426,7 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
 
   // ─── FORECASTER VIEW ─────────────────────────────────────────
   function renderForecaster(container, data) {
-    window.fprAwardTicket('legacy_portfolio_viewed', {});
+    if (typeof window.fprAwardTicket === 'function') { window.fprAwardTicket('legacy_portfolio_viewed', {}); }
     container.innerHTML = '';
 
     const header = el('div', 'lg-section-header');
