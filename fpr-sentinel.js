@@ -69,84 +69,22 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
   // Demo brief (realistic full brief for standalone preview)
   // -------------------------------------------------------------------------
   const DEMO_BRIEF = {
-    brief_week: '2026-W19',
-    brief_date: '2026-05-05',
-    threat_count_critical: 1,
-    threat_count_high: 2,
-    threat_count_watch: 2,
-    executive_summary: 'This week\'s Sentinel brief identifies one Critical federal threat directly affecting your Glock 17 and AR-15 platform. Two High-level state bills are advancing in Arizona. A Hidden Amendment in an infrastructure bill would require ATF re-registration of your serialized AR-15 upper receiver. Market movement signals are active on your registered platforms.',
+    // CONTAINMENT (2026-06): all sample legislative + hidden-amendment content removed. Sentinel's
+    // legislative monitor is pending a verified data source; no bills are shown until then. This demo
+    // object is intentionally empty so no unverified/fabricated legislation can ever render.
+    brief_week: '',
+    brief_date: '',
+    threat_count_critical: 0,
+    threat_count_high: 0,
+    threat_count_watch: 0,
+    executive_summary: 'Sentinel legislative monitoring is being updated. No verified legislative items are currently published.',
     sections_json: [
-      {
-        id: 'legislative', title: 'Legislative Threat Monitor', icon: 'gavel',
-        items: [
-          {
-            threat_level: 'critical', headline: 'Federal Magazine Capacity Ban Would Directly Affect Your Glock 17 and AR-15',
-            bill_number: 'HR 4591', status: 'Committee',
-            body: 'HR 4591 would ban manufacture, import, sale, and transfer of all ammunition feeding devices exceeding 10 rounds. Currently in House Judiciary Committee with markup scheduled for next month.',
-            personalized_impact: 'Your Glock 17 ships with a 17-round standard magazine. Your AR-15 platform typically uses 20–30 round magazines. Both would be directly affected. Transfer (including sale, gift, or bequest) would be prohibited under this bill.',
-            action: 'Contact your U.S. Representative and Senators. The NRA-ILA and GOA both have active call-to-action campaigns for this bill. Your voice is most effective during committee markup phase.',
-          },
-          {
-            threat_level: 'high', headline: 'AZ Safe Storage Bill Passes Committee, Heads to Floor',
-            bill_number: 'AZ SB 2211', status: 'Floor Calendar',
-            body: 'AZ SB 2211 would require all firearms in residences with children under 18 to be secured in a locked container when not under direct adult supervision. Passed committee 4-3 in March.',
-            personalized_impact: 'If you have children under 18 in your household, this bill would affect storage of all your registered firearms when not on your person. Bedside biometric safes are specifically addressed in the bill text as compliant storage.',
-            action: 'Contact Arizona State Senator in your district. Second committee vote scheduled this week — timing is critical.',
-          },
-          {
-            threat_level: 'high', headline: 'Hidden Amendment in Infrastructure Bill Would Require ATF Re-Registration',
-            bill_number: 'S 1892 §1144(b)', status: 'Floor — Senate',
-            body: 'The "National Omnibus Public Infrastructure Investment Act" — a 1,200-page spending bill — contains Section 1144(b) on pages 847–851 which amends 18 U.S.C. § 922 to require ATF registration of all individually-serialized firearm components within 180 days of enactment.',
-            personalized_impact: 'Your AR-15 upper receiver, if individually serialized, would require separate ATF registration under this provision. Suppressor owners are grandfathered under NFA. This was identified by Sentinel\'s hidden amendment scanner — the bill\'s public title makes no reference to firearms.',
-            action: 'Review your AR-15 upper receiver for individual serialization. Contact both Senators opposing S 1892 in its current form. The GOA has filed an amicus brief opposing Section 1144.',
-          },
-          {
-            threat_level: 'watch', headline: 'CA Assault Weapon Component Bill Would Affect Common Accessories',
-            bill_number: 'CA AB 1756', status: 'Committee',
-            body: 'California AB 1756 would expand the definition of "assault weapon component" to include pistol grips, adjustable stocks, and barrel shrouds regardless of platform. Currently in committee with second hearing scheduled.',
-            personalized_impact: 'If you reside in or regularly travel to California with your registered firearms, this bill would directly restrict common accessories on your AR-15 and Glock 17 platforms.',
-            action: 'Monitor closely if you have California connections. CalGuns Foundation is tracking this bill actively.',
-          },
-          {
-            threat_level: 'monitor', headline: 'TX Constitutional Carry Expansion Moving to Final Vote',
-            bill_number: 'TX HB 891', status: 'Floor',
-            body: 'Texas HB 891 would expand constitutional carry to additional public spaces. Currently on floor calendar for final vote this session.',
-            personalized_impact: 'This is a pro-carry expansion bill. Texas members who carry would see expanded rights under this legislation.',
-            action: 'No action required — Sentinel is tracking for your awareness.',
-          },
-        ],
-      },
-      {
-        id: 'availability', title: 'Future Availability Outlook', icon: 'chart',
-        items: [
-          { category: 'Modern Sporting Rifles (AR platform)', fas_score: 74, risk_level: 'high', trend: 'rising', headline: 'HIGH SCARCITY RISK — Multiple converging legislative pressures', body: 'Federal magazine legislation, hidden component registration amendment, and state-level bans are creating multi-vector pressure on this platform category. Demand signals are elevated as members respond to legislative uncertainty.', action: 'Members with AR-15 platforms on their Build 4 Dealer Pulse watchlist have received Opportunity Signal notifications this week.' },
-          { category: 'Semi-Auto Pistols (>10 round capacity)', fas_score: 68, risk_level: 'high', trend: 'rising', headline: 'HIGH SCARCITY RISK — Federal magazine ban in committee markup', body: 'HR 4591 magazine capacity ban directly targets standard-capacity pistol platforms. Demand signals elevated in states with pending legislation.', action: 'Review your Dealer Pulse watchlist for standard-capacity pistol platforms.' },
-          { category: '5.56/.223 Ammunition', fas_score: 63, risk_level: 'high', trend: 'rising', headline: 'HIGH SCARCITY RISK — Bulk purchase demand increasing', body: 'Direct correlation to MSR legislative uncertainty. Domestic production at capacity. Import environment affected by pending tariff discussions.', action: 'Check your Dealer Pulse opportunity signals for 5.56/.223 bulk categories.' },
-          { category: 'Bolt-Action Rifles', fas_score: 18, risk_level: 'low', trend: 'stable', headline: 'LOW RISK — No active legislative threats', body: 'Rarely targeted by legislation. Supply chain stable. No significant demand signals detected.', action: 'No action required.' },
-        ],
-      },
-      {
-        id: 'hidden_amendments', title: 'Hidden Amendment Scanner', icon: 'search',
-        items: [
-          { alert_type: 'hidden_amendment', parent_bill: 'National Omnibus Public Infrastructure Investment Act', parent_subject: 'Infrastructure / Transportation Spending', section_ref: 'Title XI, Section 1144(b), pp. 847–851', headline: 'INFRASTRUCTURE BILL CONTAINS FIREARM REGISTRATION MANDATE', body: 'Sentinel\'s hidden amendment scanner flagged this 1,200-page infrastructure spending bill for firearms-relevant language buried on pages 847–851. The public bill title ("infrastructure") would cause most gun owners to dismiss it without reading. The provision would require ATF registration of individually-serialized firearm components within 180 days.', action: 'Read the actual bill text at Congress.gov. Search for "Section 1144" and review subsection (b). Share this alert with your local shooting club.' },
-        ],
-      },
-      {
-        id: 'market', title: 'Market Intelligence', icon: 'signal', map_compliant: true,
-        items: [
-          { category: 'Modern Sporting Rifles (AR platform)', signal_type: 'availability', framing: 'Market movement detected — availability window may be narrowing.', body: 'Members with AR-15 platform items on their Dealer Pulse watchlist have received Opportunity Signal notifications this cycle. FPR dealer network is reporting elevated member inquiry volume.', action: 'Log into your Dealer Pulse dashboard to review current Opportunity Signals for your watchlist items.' },
-          { category: 'Semi-Auto Pistols (>10 round capacity)', signal_type: 'demand', framing: 'Demand signal active on standard-capacity pistol platforms.', body: 'Demand signals are elevated consistent with legislative environment. Members who have standard-capacity Glock, Sig, and Smith & Wesson platforms registered have received Opportunity Signal notifications through Dealer Pulse.', action: 'Review your Dealer Pulse watchlist and Opportunity Signal inbox.' },
-          { category: '5.56/.223 Ammunition', signal_type: 'supply', framing: 'Strategic acquisition consideration for 5.56/.223 bulk platforms.', body: 'Supply signals active in the FPR dealer network for bulk 5.56/.223 categories. Members in AZ, TX, FL, and GA are within the primary signal radius.', action: 'Contact your FPR network dealer for current bulk availability. Access at dealer-cost pricing with your FPR membership.' },
-        ],
-      },
+      { id: 'legislative',       title: 'Legislative Threat Monitor',  icon: 'gavel',  items: [] },
+      { id: 'availability',      title: 'Future Availability Outlook', icon: 'chart',  items: [] },
+      { id: 'hidden_amendments', title: 'Hidden Amendment Scanner',    icon: 'search', items: [] },
+      { id: 'market',            title: 'Market Intelligence',         icon: 'signal', map_compliant: true, items: [] },
     ],
-    action_items: [
-      'Contact your U.S. Representative and Senators regarding HR 4591 — committee markup is the most actionable phase.',
-      'Contact your Arizona State Senator regarding AZ SB 2211 before this week\'s floor vote.',
-      'Review S 1892 Section 1144(b) at Congress.gov and verify serialization status of your AR-15 upper receiver.',
-      'Check your Dealer Pulse dashboard — Opportunity Signals are active on your AR-15 and pistol watchlist items.',
-      'Share the S 1892 hidden amendment alert with your shooting club — most gun owners are unaware this provision exists.',
-    ],
+    action_items: [],
     disclaimer: 'For informational purposes only. Not legal advice. Always consult a qualified firearms attorney for legal guidance.',
   };
 

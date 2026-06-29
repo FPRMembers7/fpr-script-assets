@@ -47,6 +47,13 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
 (function (global) {
   'use strict';
 
+  // A real, authenticated member id is a UUID (the API rejects anything else with a 500). Missing or
+  // placeholder ids ('demo-member', '{{member-id}}', etc.) mean the session was not detected → we show
+  // an explicit "log in" state pointing at the real FPRMembers login page, NOT silent demo data.
+  function isRealMemberId(id) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
+  }
+
   /* ---- State -------------------------------------------------------------- */
   var state = {
     memberId:   null,
@@ -224,7 +231,10 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
     card.dataset.deliveryId = signal.delivery_id;
     if (signal.dashboard_read_at) card.classList.add('is-read');
 
-    var loginUrl = (state.demoMode ? '#' : state.apiUrl.replace('/api','') + '/member/signals?signal=' + signal.signal_id);
+    // Logged out / no session → real FPRMembers login page. Logged in → the member's signal page.
+    // (A configured-but-preview embed with no apiUrl falls back to '#'.)
+    var loginUrl = state.loggedOut ? state.loginUrl
+                 : (state.demoMode ? '#' : state.apiUrl.replace('/api','') + '/member/signals?signal=' + signal.signal_id);
 
     card.innerHTML =
       '<div class="fpr-signal-card__inner">' +
@@ -612,10 +622,16 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
     var container = document.querySelector('.fpr-pulse');
     if (!container) return;
 
-    await window.__fprResolveMount(container);
+    // Pass an apiFallback so the resolver injects a working data-api-url even if the Webflow mount is
+    // missing the attribute (otherwise the page silently runs in demo/logged-out mode).
+    await window.__fprResolveMount(container, 'https://fpr-api-production.up.railway.app');
     state.memberId = container.dataset.memberId || 'demo-member';
     state.apiUrl   = container.dataset.apiUrl   || '';
-    state.demoMode = container.dataset.demo === 'true' || !state.apiUrl;
+    state.loginUrl = container.dataset.loginUrl || 'https://www.fprmembers.com/log-in';
+    // Session not detected (missing/non-UUID member id): explicit logged-out state, real login CTA.
+    state.loggedOut = !isRealMemberId(state.memberId);
+    // Use demo content (and never hit the API with a bad id) when there's no API URL or no real session.
+    state.demoMode = container.dataset.demo === 'true' || !state.apiUrl || state.loggedOut;
 
     bindEvents(container);
     load(container);

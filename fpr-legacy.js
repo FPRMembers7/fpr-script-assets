@@ -1237,13 +1237,29 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
 
     // In production mode, patterns are loaded from the brain endpoint (the
     // dashboard response does not include them). Demo mode uses DEMO.brain_patterns.
-    if (!isDemoMode() && (!state.brainPatterns || !state.brainPatterns.length)) {
+    // Fetch patterns ONCE. loadBrainPatterns() stores the result in state.brainPatterns:
+    //   null = not fetched yet, [] = fetched but withheld (collective sample below the 25-member
+    //   minimum). Guard the fetch on `== null` (NOT on .length) so an empty result doesn't re-enter
+    //   the loading branch and spin forever.
+    if (!isDemoMode() && state.brainPatterns == null) {
       const loadingNote = el('div', 'lg-empty');
       loadingNote.innerHTML = '<p>Loading Collective Brain patterns…</p>';
       container.appendChild(loadingNote);
       loadBrainPatterns()
-        .then(p => { data.brain_patterns = p; renderBrain(container, data); })
-        .catch(err => { loadingNote.innerHTML = '<p>Could not load patterns: ' + esc(err.message) + '</p>'; });
+        .then(() => renderBrain(container, data))   // state.brainPatterns is now set ([] or data)
+        .catch(err => {
+          state.brainPatterns = [];                 // mark fetched so we don't loop on error
+          loadingNote.innerHTML = '<p>Could not load patterns: ' + esc(err.message) + '</p>';
+        });
+      return;
+    }
+    // Fetched but empty → collective sample is below the 25-member minimum: explicit empty-state
+    // (matches the "Minimum 25-member sample" subhead), NOT an infinite spinner.
+    if (!isDemoMode() && (!state.brainPatterns || !state.brainPatterns.length)) {
+      const empty = el('div', 'lg-empty');
+      empty.style.cssText = 'padding:32px';
+      empty.innerHTML = '<p>Not enough member data yet — the Collective Brain unlocks once 25 members are contributing. Your activity helps reach the threshold.</p>';
+      container.appendChild(empty);
       return;
     }
     // In production, copy patterns into data so the renderer below sees them.
