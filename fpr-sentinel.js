@@ -77,7 +77,7 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
     threat_count_critical: 0,
     threat_count_high: 0,
     threat_count_watch: 0,
-    executive_summary: 'Sentinel legislative monitoring is being updated. No verified legislative items are currently published.',
+    executive_summary: 'No verified firearm-related federal legislation is currently flagged.',
     sections_json: [
       { id: 'legislative',       title: 'Legislative Threat Monitor',  icon: 'gavel',  items: [] },
       { id: 'availability',      title: 'Future Availability Outlook', icon: 'chart',  items: [] },
@@ -89,15 +89,11 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
   };
 
   const DEMO_PROFILE = {
-    state_code: 'AZ', city_name: 'Phoenix', zip_code: '85001',
-    carry_permit_type: 'concealed', profile_complete: true,
+    state_code: '', city_name: '', zip_code: '',
+    carry_permit_type: 'none', profile_complete: false,
   };
 
-  const DEMO_FIREARMS = [
-    { id: 'f1', make: 'Glock', model: '17 Gen5', caliber: '9mm', firearm_type: 'pistol', action_type: 'semi_auto', magazine_capacity: 17 },
-    { id: 'f2', make: 'Daniel Defense', model: 'DDM4 V7', caliber: '5.56 NATO', firearm_type: 'rifle', action_type: 'semi_auto', magazine_capacity: 30 },
-    { id: 'f3', make: 'Sig Sauer', model: 'P365', caliber: '9mm', firearm_type: 'pistol', action_type: 'semi_auto', magazine_capacity: 12 },
-  ];
+  const DEMO_FIREARMS = [];
 
   // -------------------------------------------------------------------------
   // State
@@ -387,7 +383,6 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
     const prefs = [
       { key: 'legislative',      label: 'Legislative Threats',    desc: 'Bills and laws affecting your firearms and carry rights.' },
       { key: 'availability',     label: 'Availability Outlook',   desc: 'Future Availability Score changes and scarcity signals.' },
-      { key: 'hidden_amendments',label: 'Hidden Amendment Alerts',desc: 'Firearm provisions buried in unrelated bills.' },
       { key: 'market',           label: 'Market Intelligence',    desc: 'MAP-compliant availability and demand signals from the FPR dealer network.' },
     ];
     return prefs.map(p => `
@@ -486,6 +481,19 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
     const actions  = typeof brief.action_items  === 'string'
       ? JSON.parse(brief.action_items)  : (brief.action_items  || []);
 
+    var _hasItems = sections.some(function(sec){ return (sec.items || []).length > 0; });
+    if (!_hasItems) {
+      var emptyWrap = el('div', 'fpr-sentinel__brief');
+      emptyWrap.innerHTML = `
+        <div class="fpr-sentinel__empty" style="padding:48px 24px;text-align:center">
+          ${IC.brief}
+          <p style="font-size:15px;font-weight:600;color:var(--fpr-gray-700);margin:14px 0 4px">No verified firearm-related federal legislation is currently flagged.</p>
+          <p style="font-size:13px;color:var(--fpr-gray-500);margin:0;line-height:1.6">Sentinel only reports bills confirmed against official Congress.gov records. When a verified firearm-related federal bill is active, it will appear here.</p>
+        </div>
+        <div class="fpr-sentinel__disclaimer fpr-sentinel__disclaimer--sticky">⚠️ For informational purposes only. Not legal advice. Always consult a qualified firearms attorney for legal guidance.</div>
+      `;
+      return emptyWrap;
+    }
     if (typeof window.fprAwardTicket === 'function') { window.fprAwardTicket('brief_viewed', { week: brief.brief_week || '' }); }
     const wrap = el('div', 'fpr-sentinel__brief');
     wrap.innerHTML = `
@@ -663,13 +671,20 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
   // ==========================================================================
   // VIEW: LEGISLATIVE (full tracker)
   // ==========================================================================
+  function getSectionItems(id) {
+    let secs = state.brief && state.brief.sections_json;
+    if (typeof secs === 'string') { try { secs = JSON.parse(secs); } catch (e) { secs = []; } }
+    const sec = (secs || []).find(x => x.id === id);
+    return (sec && sec.items) || [];
+  }
+
   function buildLegislativeView() {
     const wrap = el('div', 'fpr-sentinel__setup');
     wrap.innerHTML = `
       <h2 style="font-size:22px;font-weight:800;margin:0 0 4px;color:var(--fpr-gray-900)">Legislative Monitor</h2>
       <p style="font-size:14px;color:var(--fpr-gray-500);margin:0 0 20px">All active legislative items tracked by Sentinel, ordered by threat level.</p>
 
-      ${buildLegislativeItems(DEMO_BRIEF.sections_json[0].items)}
+      ${(function(){ var items = getSectionItems('legislative'); return items.length ? buildLegislativeItems(items) : '<div class="fpr-sentinel__empty" style="padding:28px;text-align:center;color:var(--fpr-gray-500)">No verified firearm-related federal legislation is currently flagged.</div>'; })()}
 
       <div class="fpr-sentinel__disclaimer" style="margin-top:16px">⚠️ For informational purposes only. Not legal advice. Always consult a qualified firearms attorney for legal guidance.</div>
     `;
@@ -694,7 +709,7 @@ window.__fprResolveMount = window.__fprResolveMount || async function (el, apiFa
         ).join('')}
       </div>
 
-      ${buildFASItems(DEMO_BRIEF.sections_json[1].items)}
+      ${(function(){ var items = getSectionItems('availability'); return items.length ? buildFASItems(items) : '<div class="fpr-sentinel__empty" style="padding:28px;text-align:center;color:var(--fpr-gray-500)">No availability data is currently published.</div>'; })()}
 
       <div class="fpr-sentinel__disclaimer" style="margin-top:16px">⚠️ For informational purposes only. Not legal advice. Always consult a qualified firearms attorney for legal guidance.</div>
     `;
